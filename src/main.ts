@@ -1,6 +1,9 @@
 import "./style.css";
 import * as THREE from "three";
 import { Bubble } from "./bubbles/Bubble";
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { BokehPass } from "three/addons/postprocessing/BokehPass.js";
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x10121f);
@@ -17,6 +20,15 @@ const renderer = new THREE.WebGLRenderer({
 });
 
 renderer.setSize(window.innerWidth, window.innerHeight);
+
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bokehPass = new BokehPass(scene, camera, {
+  focus: 5,
+  aperture: 0.0004,
+  maxblur: 0.02,
+});
+composer.addPass(bokehPass);
 
 document.body.appendChild(renderer.domElement);
 
@@ -51,10 +63,10 @@ for (let i = 0; i < 5; i++) {
 const backgroundBubbles: THREE.Mesh[] = [];
 
 const backgroundMaterial = new THREE.MeshBasicMaterial({
-  color: 0x8ecae6,
+  color: 0x9bcfff,
   wireframe: true,
   transparent: true,
-  opacity: 0.08,
+  opacity: 0.16,
 });
 
 for (let i = 0; i < 60; i++) {
@@ -64,7 +76,7 @@ for (let i = 0; i < 60; i++) {
   bubble.position.set(
     (Math.random() - 0.8) * 12,
     (Math.random() - 0.5) * 8,
-    -1 - Math.random() * 6,
+    -2 - Math.random() * 6,
   );
   backgroundBubbles.push(bubble);
   scene.add(bubble);
@@ -144,16 +156,17 @@ function animate() {
     }
   }
 
-  for (const bubble of backgroundBubbles) { 
-    bubble.position.x += 0.005
-    bubble.position.y += Math.sin(Date.now() * 0.0005 + bubble.position.x) * 0.005;
+  for (const bubble of backgroundBubbles) {
+    bubble.position.x += 0.005;
+    bubble.position.y +=
+      Math.sin(Date.now() * 0.0005 + bubble.position.x) * 0.005;
 
     if (bubble.position.x > 7) {
       bubble.position.x = -7;
     }
   }
 
-  renderer.render(scene, camera);
+  composer.render();
   requestAnimationFrame(animate);
 }
 
@@ -164,4 +177,5 @@ window.addEventListener("resize", () => {
   camera.updateProjectionMatrix();
 
   renderer.setSize(window.innerWidth, window.innerHeight);
+  composer.setSize(window.innerWidth, window.innerHeight);
 });
