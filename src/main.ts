@@ -79,7 +79,6 @@ const backgroundOutlineMaterial = new THREE.MeshBasicMaterial({
   depthWrite: false,
 });
 
-
 function placeBackgroundBubbleAnywhere(bubble: THREE.Group) {
   bubble.position.z = -2 - Math.random() * 6;
 
@@ -129,7 +128,7 @@ for (let i = 0; i < 200; i++) {
 
   bubble.scale.setScalar(scale);
 
-  placeBackgroundBubbleAnywhere(bubble, i, 200);
+  placeBackgroundBubbleAnywhere(bubble);
 
   const direction = new THREE.Vector2(
     (Math.random() - 0.5) * 2,
