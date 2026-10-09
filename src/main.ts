@@ -51,24 +51,31 @@ const bounds = {
   y: 3,
 };
 
-const radius = 1;
-
 function animate() {
   // Update sphere positions and handle collisions with bounds
   for (const bubble of bubbles) {
     bubble.update();
 
-    if (
-      bubble.mesh.position.x > bounds.x ||
-      bubble.mesh.position.x < -bounds.x
-    ) {
-      bubble.velocity.x *= -1;
+    const radius = bubble.mesh.scale.x;
+
+    if (bubble.mesh.position.x > bounds.x - radius) {
+      bubble.mesh.position.x = bounds.x - radius;
+      bubble.velocity.x = -Math.abs(bubble.velocity.x);
     }
-    if (
-      bubble.mesh.position.y > bounds.y ||
-      bubble.mesh.position.y < -bounds.y
-    ) {
-      bubble.velocity.y *= -1;
+
+    if (bubble.mesh.position.x < -bounds.x + radius) {
+      bubble.mesh.position.x = -bounds.x + radius;
+      bubble.velocity.x = Math.abs(bubble.velocity.x);
+    }
+
+    if (bubble.mesh.position.y > bounds.y - radius) {
+      bubble.mesh.position.y = bounds.y - radius;
+      bubble.velocity.y = -Math.abs(bubble.velocity.y);
+    }
+
+    if (bubble.mesh.position.y < -bounds.y + radius) {
+      bubble.mesh.position.y = -bounds.y + radius;
+      bubble.velocity.y = Math.abs(bubble.velocity.y);
     }
   }
 
