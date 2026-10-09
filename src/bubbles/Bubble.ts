@@ -5,7 +5,11 @@ export class Bubble {
   mesh: THREE.Mesh;
   velocity: THREE.Vector3;
 
-  constructor(geometry: THREE.SphereGeometry, material: THREE.Material) {
+  constructor(
+    geometry: THREE.SphereGeometry,
+    material: THREE.Material,
+    outlineMaterial: THREE.Material,
+  ) {
     this.mesh = new THREE.Mesh(geometry, material.clone());
 
     this.mesh.position.set(Math.random() * 6 - 3, Math.random() * 4 - 2, 0);
@@ -25,6 +29,18 @@ export class Bubble {
     // Eventually, the scale will be set by some representation of importance to me.
     const scale = 0.6 * Math.random() * colors.length;
     this.mesh.scale.setScalar(scale);
+    const outline = new THREE.Mesh(geometry, outlineMaterial);
+    this.mesh.add(outline);
+
+    const glowMaterial = new THREE.MeshBasicMaterial({
+      color: color,
+      transparent: true,
+      opacity: 0.08,
+      side: THREE.BackSide,
+    });
+    const glow = new THREE.Mesh(geometry, glowMaterial);
+    glow.scale.setScalar(1.15);
+    this.mesh.add(glow);
   }
 
   update() {

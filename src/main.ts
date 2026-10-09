@@ -3,6 +3,7 @@ import * as THREE from "three";
 import { Bubble } from "./bubbles/Bubble";
 
 const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x10121f);
 
 const camera = new THREE.PerspectiveCamera(
   75,
@@ -22,12 +23,25 @@ document.body.appendChild(renderer.domElement);
 camera.position.z = 5;
 
 const geometry = new THREE.SphereGeometry(1, 32, 32);
-const material = new THREE.MeshBasicMaterial({ color: 0x5bcefa });
+
+const material = new THREE.MeshBasicMaterial({
+  color: 0xffffff,
+  wireframe: false,
+  transparent: true,
+  opacity: 0.3,
+});
+
+const outlineMaterial = new THREE.MeshBasicMaterial({
+  color: 0xffffff,
+  wireframe: true,
+  transparent: true,
+  opacity: 0.5,
+});
 
 const bubbles: Bubble[] = [];
 
 for (let i = 0; i < 5; i++) {
-  const bubble = new Bubble(geometry, material);
+  const bubble = new Bubble(geometry, material, outlineMaterial);
   bubbles.push(bubble);
   scene.add(bubble.mesh);
 }
@@ -77,3 +91,10 @@ function animate() {
 }
 
 animate();
+
+window.addEventListener("resize", () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
