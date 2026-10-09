@@ -44,6 +44,12 @@ export class Bubble {
   }
 
   update() {
+    // Add a tiny random force.
+    this.velocity.x += (Math.random() - 0.5) * 0.0005;
+    this.velocity.y += (Math.random() - 0.5) * 0.0005;
+
+    // Keep the movement slow and gentle.
+    this.velocity.clampLength(0, 0.015);
     this.mesh.position.add(this.velocity);
   }
 }
