@@ -60,7 +60,9 @@ for (let i = 0; i < 5; i++) {
 }
 
 // Background bubbles.
-const backgroundBubbles: THREE.Mesh[] = [];
+const backgroundBubbles: THREE.Group[] = [];
+const backgroundVelocities: THREE.Vector2[] = [];
+const backgroundSizes: number[] = [];
 
 const backgroundFillMaterial = new THREE.MeshBasicMaterial({
   color: 0x7197d1,
@@ -77,25 +79,73 @@ const backgroundOutlineMaterial = new THREE.MeshBasicMaterial({
   depthWrite: false,
 });
 
-for (let i = 0; i < 60; i++) {
+
+function placeBackgroundBubbleAnywhere(bubble: THREE.Group) {
+  bubble.position.z = -2 - Math.random() * 6;
+
+  const bounds = getBounds(bubble.position.z);
+
+  const paddingX = bounds.x * 0.1;
+  const paddingY = bounds.y * 0.1;
+
+  bubble.position.x = (Math.random() * 2 - 1) * (bounds.x - paddingX);
+
+  bubble.position.y = (Math.random() * 2 - 1) * (bounds.y - paddingY);
+}
+
+function spawnBackgroundBubble(bubble: THREE.Group): THREE.Vector2 {
+  bubble.position.z = -2 - Math.random() * 6;
+
+  const bounds = getBounds(bubble.position.z);
+  const edge = Math.floor(Math.random() * 4);
+
+  const x = (Math.random() * 2 - 1) * bounds.x;
+  const y = (Math.random() * 2 - 1) * bounds.y;
+
+  if (edge === 0) {
+    bubble.position.set(-bounds.x, y, bubble.position.z);
+    return new THREE.Vector2(1, (Math.random() - 0.5) * 0.8).normalize();
+  } else if (edge === 1) {
+    bubble.position.set(bounds.x, y, bubble.position.z);
+    return new THREE.Vector2(-1, (Math.random() - 0.5) * 0.8).normalize();
+  } else if (edge === 2) {
+    bubble.position.set(x, -bounds.y, bubble.position.z);
+    return new THREE.Vector2((Math.random() - 0.5) * 0.8, 1).normalize();
+  } else {
+    bubble.position.set(x, bounds.y, bubble.position.z);
+    return new THREE.Vector2((Math.random() - 0.5) * 0.8, -1).normalize();
+  }
+}
+
+for (let i = 0; i < 200; i++) {
   const bubble = new THREE.Group();
   const scale = 0.15 + Math.random() * 0.35;
+  backgroundSizes.push(scale);
   const fill = new THREE.Mesh(geometry, backgroundFillMaterial);
   const outline = new THREE.Mesh(geometry, backgroundOutlineMaterial);
+
   bubble.add(fill);
   bubble.add(outline);
+
   bubble.scale.setScalar(scale);
-  bubble.position.set(
-    (Math.random() - 0.8) * 12,
-    (Math.random() - 0.5) * 8,
-    -2 - Math.random() * 6,
+
+  placeBackgroundBubbleAnywhere(bubble, i, 200);
+
+  const direction = new THREE.Vector2(
+    (Math.random() - 0.5) * 2,
+    (Math.random() - 0.5) * 2,
+  ).normalize();
+
+  backgroundVelocities.push(
+    direction.multiplyScalar(0.001 + Math.random() * 0.001),
   );
+
   backgroundBubbles.push(bubble);
   scene.add(bubble);
 }
 
-function getBounds() {
-  const distance = camera.position.z;
+function getBounds(z = 0) {
+  const distance = camera.position.z - z;
   const vertical =
     2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * distance;
   const horizontal = vertical * camera.aspect;
@@ -168,13 +218,31 @@ function animate() {
     }
   }
 
-  for (const bubble of backgroundBubbles) {
-    bubble.position.x += 0.005;
-    bubble.position.y +=
-      Math.sin(Date.now() * 0.0005 + bubble.position.x) * 0.005;
+  // Animate background bubbles with a gentle floating effect. The bubbles will move slowly to the right and oscillate up and down using a sine wave.
+  const time = Date.now() * 0.001;
+  for (let i = 0; i < backgroundBubbles.length; i++) {
+    const bubble = backgroundBubbles[i];
+    const velocity = backgroundVelocities[i];
+    const baseSize = backgroundSizes[i];
 
-    if (bubble.position.x > 7) {
-      bubble.position.x = -7;
+    bubble.position.x += velocity.x;
+    bubble.position.y += velocity.y;
+
+    const pulse = 1 + Math.sin(time * 0.4 + i * 0.7) * 0.025;
+    bubble.scale.setScalar(baseSize * pulse);
+
+    const bounds = getBounds(bubble.position.z);
+    const margin = bubble.scale.x;
+
+    if (
+      bubble.position.x > bounds.x + margin ||
+      bubble.position.x < -bounds.x - margin ||
+      bubble.position.y > bounds.y + margin ||
+      bubble.position.y < -bounds.y - margin
+    ) {
+      const direction = spawnBackgroundBubble(bubble);
+
+      velocity.copy(direction).multiplyScalar(0.001 + Math.random() * 0.001);
     }
   }
 
