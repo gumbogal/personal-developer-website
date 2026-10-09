@@ -38,6 +38,7 @@ const outlineMaterial = new THREE.MeshBasicMaterial({
   opacity: 0.5,
 });
 
+// Foreground bubbles.
 const bubbles: Bubble[] = [];
 
 for (let i = 0; i < 5; i++) {
@@ -46,10 +47,38 @@ for (let i = 0; i < 5; i++) {
   scene.add(bubble.mesh);
 }
 
-const bounds = {
-  x: 4,
-  y: 3,
-};
+// Background bubbles.
+const backgroundBubbles: THREE.Mesh[] = [];
+
+const backgroundMaterial = new THREE.MeshBasicMaterial({
+  color: 0x8ecae6,
+  wireframe: true,
+  transparent: true,
+  opacity: 0.08,
+});
+
+for (let i = 0; i < 60; i++) {
+  const bubble = new THREE.Mesh(geometry, backgroundMaterial);
+  const scale = 0.08 + Math.random() * 0.6;
+  bubble.scale.setScalar(scale);
+  bubble.position.set(
+    (Math.random() - 0.8) * 12,
+    (Math.random() - 0.5) * 8,
+    -1 - Math.random() * 6,
+  );
+  backgroundBubbles.push(bubble);
+  scene.add(bubble);
+}
+
+function getBounds() {
+  const distance = camera.position.z;
+  const vertical =
+    2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * distance;
+  const horizontal = vertical * camera.aspect;
+  return { x: horizontal / 2, y: vertical / 2 };
+}
+
+const bounds = getBounds();
 
 function animate() {
   // Update sphere positions and handle collisions with bounds
@@ -112,6 +141,15 @@ function animate() {
           bubbleB.velocity.sub(impulse);
         }
       }
+    }
+  }
+
+  for (const bubble of backgroundBubbles) { 
+    bubble.position.x += 0.005
+    bubble.position.y += Math.sin(Date.now() * 0.0005 + bubble.position.x) * 0.005;
+
+    if (bubble.position.x > 7) {
+      bubble.position.x = -7;
     }
   }
 
