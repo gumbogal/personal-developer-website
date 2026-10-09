@@ -62,16 +62,28 @@ for (let i = 0; i < 5; i++) {
 // Background bubbles.
 const backgroundBubbles: THREE.Mesh[] = [];
 
-const backgroundMaterial = new THREE.MeshBasicMaterial({
-  color: 0x9bcfff,
-  wireframe: true,
+const backgroundFillMaterial = new THREE.MeshBasicMaterial({
+  color: 0x7197d1,
   transparent: true,
-  opacity: 0.16,
+  opacity: 0.1,
+  depthWrite: false,
+});
+
+const backgroundOutlineMaterial = new THREE.MeshBasicMaterial({
+  color: 0x9bcfff,
+  transparent: true,
+  opacity: 0.22,
+  wireframe: true,
+  depthWrite: false,
 });
 
 for (let i = 0; i < 60; i++) {
-  const bubble = new THREE.Mesh(geometry, backgroundMaterial);
-  const scale = 0.08 + Math.random() * 0.6;
+  const bubble = new THREE.Group();
+  const scale = 0.15 + Math.random() * 0.35;
+  const fill = new THREE.Mesh(geometry, backgroundFillMaterial);
+  const outline = new THREE.Mesh(geometry, backgroundOutlineMaterial);
+  bubble.add(fill);
+  bubble.add(outline);
   bubble.scale.setScalar(scale);
   bubble.position.set(
     (Math.random() - 0.8) * 12,
