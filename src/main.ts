@@ -75,13 +75,35 @@ function animate() {
   // Handle collisions between spheres
   for (let i = 0; i < bubbles.length; i++) {
     for (let j = i + 1; j < bubbles.length; j++) {
-      const distance = bubbles[i].mesh.position.distanceTo(
-        bubbles[j].mesh.position,
+      const bubbleA = bubbles[i];
+      const bubbleB = bubbles[j];
+
+      const direction = new THREE.Vector3().subVectors(
+        bubbleB.mesh.position,
+        bubbleA.mesh.position,
       );
 
-      if (distance < radius * 2) {
-        bubbles[i].velocity.multiplyScalar(-1);
-        bubbles[j].velocity.multiplyScalar(-1);
+      const distance = direction.length();
+      const minDistance = bubbleA.mesh.scale.x + bubbleB.mesh.scale.x;
+
+      if (distance < minDistance && distance > 0) {
+        direction.normalize();
+
+        // Separate overlapping bubbles.
+        const overlap = minDistance - distance;
+
+        bubbleA.mesh.position.addScaledVector(direction, -overlap / 2);
+        bubbleB.mesh.position.addScaledVector(direction, overlap / 2);
+
+        // Only exchange momentum if the bubbles are approaching each other.
+        const relativeVelocity = bubbleB.velocity.clone().sub(bubbleA.velocity);
+        const speedAlongCollision = relativeVelocity.dot(direction);
+
+        if (speedAlongCollision < 0) {
+          const impulse = direction.clone().multiplyScalar(speedAlongCollision);
+          bubbleA.velocity.add(impulse);
+          bubbleB.velocity.sub(impulse);
+        }
       }
     }
   }
