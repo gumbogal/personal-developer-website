@@ -1,5 +1,6 @@
 import "./style.css";
 import * as THREE from "three";
+import { config } from "./config";
 import { Bubble } from "./bubbles/Bubble";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
@@ -40,20 +41,20 @@ const material = new THREE.MeshBasicMaterial({
   color: 0xffffff,
   wireframe: false,
   transparent: true,
-  opacity: 0.3,
+  opacity: config.projectBubbles.material.fillOpacity,
 });
 
 const outlineMaterial = new THREE.MeshBasicMaterial({
   color: 0xffffff,
   wireframe: true,
   transparent: true,
-  opacity: 0.5,
+  opacity: config.projectBubbles.material.outlineOpacity,
 });
 
 // Foreground bubbles.
 const bubbles: Bubble[] = [];
 
-for (let i = 0; i < 5; i++) {
+for (let i = 0; i < config.projectBubbles.count; i++) {
   const bubble = new Bubble(geometry, material, outlineMaterial);
   bubbles.push(bubble);
   scene.add(bubble.mesh);
@@ -66,22 +67,26 @@ const backgroundSizes: number[] = [];
 const backgroundDrift: number[] = [];
 
 const backgroundFillMaterial = new THREE.MeshBasicMaterial({
-  color: 0x7197d1,
+  color: config.backgroundBubbles.colors.fill,
   transparent: true,
-  opacity: 0.1,
+  opacity: config.backgroundBubbles.material.fillOpacity,
   depthWrite: false,
 });
 
 const backgroundOutlineMaterial = new THREE.MeshBasicMaterial({
-  color: 0x9bcfff,
+  color: config.backgroundBubbles.colors.outline,
   transparent: true,
-  opacity: 0.22,
+  opacity: config.backgroundBubbles.material.outlineOpacity,
   wireframe: true,
   depthWrite: false,
 });
 
 function placeBackgroundBubbleAnywhere(bubble: THREE.Group) {
-  bubble.position.z = -2 - Math.random() * 6;
+  bubble.position.z =
+    config.backgroundBubbles.appearance.depthMin +
+    Math.random() *
+      (config.backgroundBubbles.appearance.depthMax -
+        config.backgroundBubbles.appearance.depthMin);
 
   const bounds = getBounds(bubble.position.z);
 
@@ -94,7 +99,11 @@ function placeBackgroundBubbleAnywhere(bubble: THREE.Group) {
 }
 
 function spawnBackgroundBubble(bubble: THREE.Group): THREE.Vector2 {
-  bubble.position.z = -2 - Math.random() * 6;
+  bubble.position.z =
+    config.backgroundBubbles.appearance.depthMin +
+    Math.random() *
+      (config.backgroundBubbles.appearance.depthMax -
+        config.backgroundBubbles.appearance.depthMin);
 
   const bounds = getBounds(bubble.position.z);
   const edge = Math.floor(Math.random() * 4);
@@ -117,11 +126,22 @@ function spawnBackgroundBubble(bubble: THREE.Group): THREE.Vector2 {
   }
 }
 
-for (let i = 0; i < 200; i++) {
+for (let i = 0; i < config.backgroundBubbles.count; i++) {
   const bubble = new THREE.Group();
-  const scale = 0.15 + Math.random() * 0.35;
+  const scale =
+    config.backgroundBubbles.appearance.sizeMin +
+    Math.random() *
+      (config.backgroundBubbles.appearance.sizeMax -
+        config.backgroundBubbles.appearance.sizeMin);
+  const drift =
+    config.backgroundBubbles.movement.driftMin +
+    Math.random() *
+      (config.backgroundBubbles.movement.driftMax -
+        config.backgroundBubbles.movement.driftMin);
+
   backgroundSizes.push(scale);
-  backgroundDrift.push(0.001 + Math.random() * 0.001);
+  backgroundDrift.push(drift);
+
   const fill = new THREE.Mesh(geometry, backgroundFillMaterial);
   const outline = new THREE.Mesh(geometry, backgroundOutlineMaterial);
 
@@ -137,9 +157,13 @@ for (let i = 0; i < 200; i++) {
     (Math.random() - 0.5) * 2,
   ).normalize();
 
-  backgroundVelocities.push(
-    direction.multiplyScalar(0.001 + Math.random() * 0.001),
-  );
+  const speed =
+    config.backgroundBubbles.movement.speedMin +
+    Math.random() *
+      (config.backgroundBubbles.movement.speedMax -
+        config.backgroundBubbles.movement.speedMin);
+
+  backgroundVelocities.push(direction.multiplyScalar(speed));
 
   backgroundBubbles.push(bubble);
   scene.add(bubble);
@@ -226,14 +250,20 @@ function animate() {
     const velocity = backgroundVelocities[i];
     const baseSize = backgroundSizes[i];
 
-    const driftFrequency = 1.2; // Frequency of the drift oscillation.
+    const driftFrequency = config.backgroundBubbles.movement.driftFrequency;
     const drift = Math.sin(time * driftFrequency + i) * backgroundDrift[i];
 
     bubble.position.x += velocity.x + drift;
     bubble.position.y +=
       velocity.y + Math.cos(time * driftFrequency + i) * backgroundDrift[i];
 
-    const pulse = 1 + Math.sin(time * 0.4 + i * 0.7) * 0.025;
+    const pulse =
+      1 +
+      Math.sin(
+        time * config.backgroundBubbles.appearance.pulseFrequency +
+          i * config.backgroundBubbles.appearance.pulsePhaseOffset,
+      ) *
+        config.backgroundBubbles.appearance.pulseAmplitude;
     bubble.scale.setScalar(baseSize * pulse);
 
     const bounds = getBounds(bubble.position.z);
@@ -246,8 +276,13 @@ function animate() {
       bubble.position.y < -bounds.y - margin
     ) {
       const direction = spawnBackgroundBubble(bubble);
+      const speed =
+        config.backgroundBubbles.movement.speedMin +
+        Math.random() *
+          (config.backgroundBubbles.movement.speedMax -
+            config.backgroundBubbles.movement.speedMin);
 
-      velocity.copy(direction).multiplyScalar(0.001 + Math.random() * 0.001);
+      velocity.copy(direction).multiplyScalar(speed);
     }
   }
 
