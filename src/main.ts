@@ -63,6 +63,7 @@ for (let i = 0; i < 5; i++) {
 const backgroundBubbles: THREE.Group[] = [];
 const backgroundVelocities: THREE.Vector2[] = [];
 const backgroundSizes: number[] = [];
+const backgroundDrift: number[] = [];
 
 const backgroundFillMaterial = new THREE.MeshBasicMaterial({
   color: 0x7197d1,
@@ -120,6 +121,7 @@ for (let i = 0; i < 200; i++) {
   const bubble = new THREE.Group();
   const scale = 0.15 + Math.random() * 0.35;
   backgroundSizes.push(scale);
+  backgroundDrift.push(0.001 + Math.random() * 0.001);
   const fill = new THREE.Mesh(geometry, backgroundFillMaterial);
   const outline = new THREE.Mesh(geometry, backgroundOutlineMaterial);
 
@@ -224,8 +226,12 @@ function animate() {
     const velocity = backgroundVelocities[i];
     const baseSize = backgroundSizes[i];
 
-    bubble.position.x += velocity.x;
-    bubble.position.y += velocity.y;
+    const driftFrequency = 1.2; // Frequency of the drift oscillation.
+    const drift = Math.sin(time * driftFrequency + i) * backgroundDrift[i];
+
+    bubble.position.x += velocity.x + drift;
+    bubble.position.y +=
+      velocity.y + Math.cos(time * driftFrequency + i) * backgroundDrift[i];
 
     const pulse = 1 + Math.sin(time * 0.4 + i * 0.7) * 0.025;
     bubble.scale.setScalar(baseSize * pulse);
