@@ -6,14 +6,14 @@ export const config = {
       speedMax: 0.006, // Maximum speed of the background bubbles.
 
       driftMin: 0.000001, // Minimum drift amount for the background bubbles.
-      driftMax: 0.0005, // Maximum drift amount for the background bubbles.
-      driftFrequency: 0.25, // Frequency of the drift oscillation for the background bubbles.
+      driftMax: 0.00001, // Maximum drift amount for the background bubbles.
+      driftFrequency: 0.0001, // Frequency of the drift oscillation for the background bubbles.
     },
     appearance: {
       sizeMin: 0.15, // Minimum size of the background bubbles.
       sizeMax: 0.5, // Maximum size of the background bubbles.
 
-      pulseAmplitude: 0.05, // Amplitude of the pulsing effect for the background bubbles.
+      pulseAmplitude: 0.009, // Amplitude of the pulsing effect for the background bubbles.
       pulseFrequency: 5, // Frequency of the pulsing effect for the background bubbles.
       pulsePhaseOffset: 1.2, // Phase offset for the pulsing effect of the background bubbles.
 
