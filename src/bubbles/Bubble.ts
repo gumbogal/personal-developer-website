@@ -56,9 +56,10 @@ export class Bubble {
 
   update() {
     // Add a tiny random force.
-    const randomForce = config.projectBubbles.movement.randomForce;
-    this.velocity.x += (Math.random() - 0.5) * randomForce;
-    this.velocity.y += (Math.random() - 0.5) * randomForce;
+    const randomForceX = config.projectBubbles.movement.randomForceX;
+    const randomForceY = config.projectBubbles.movement.randomForceY;
+    this.velocity.x += (Math.random() - 0.5) * randomForceX;
+    this.velocity.y += (Math.random() - 0.5) * randomForceY;
 
     // Keep the movement slow and gentle.
     this.velocity.clampLength(0, config.projectBubbles.movement.maxSpeed);

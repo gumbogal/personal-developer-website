@@ -36,7 +36,8 @@ export const config = {
       speedMin: 0.001, // Minimum speed of the project bubbles.
       speedMax: 0.006, // Maximum speed of the project bubbles.
       maxSpeed: 0.015, // Maximum speed of the project bubbles.
-      randomForce: 0.0005, // Random force applied to the project bubbles for gentle movement.
+      randomForceX: 0.0005, // Random force applied to the project bubbles' X axis for gentle movement.
+      randomForceY: 0.0005, // Random force applied to the project bubbles' Y axis for gentle movement.
     },
     appearance: {
       sizeMin: 0.6, // Minimum size of the project bubbles.
