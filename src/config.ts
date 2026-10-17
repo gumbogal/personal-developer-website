@@ -14,7 +14,7 @@ export const config = {
       sizeMax: 0.5, // Maximum size of the background bubbles.
 
       pulseAmplitude: 0.009, // Amplitude of the pulsing effect for the background bubbles.
-      pulseFrequency: 5 + Math.random() * 15, // Frequency of the pulsing effect for the background bubbles.
+      pulseFrequency: 5 + Math.random() * 5.2, // Frequency of the pulsing effect for the background bubbles.
       pulsePhaseOffset: 1.2, // Phase offset for the pulsing effect of the background bubbles.
 
       depthMin: -100, // Minimum depth (z-position) of the background bubbles.
@@ -47,6 +47,10 @@ export const config = {
     material: {
       fillOpacity: 0.3, // Opacity of the fill material for the project bubbles.
       outlineOpacity: 0.5, // Opacity of the outline material for the project bubbles.
+    },
+    glow: {
+      opacity: 0.08, // Opacity of the glow around the project bubbles.
+      scale: 1.15, // Scale of the glow around the project bubbles.
     },
   },
 };

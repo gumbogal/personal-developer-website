@@ -46,11 +46,11 @@ export class Bubble {
     const glowMaterial = new THREE.MeshBasicMaterial({
       color: color,
       transparent: true,
-      opacity: 0.08,
+      opacity: config.projectBubbles.glow.opacity,
       side: THREE.BackSide,
     });
     const glow = new THREE.Mesh(geometry, glowMaterial);
-    glow.scale.setScalar(1.15);
+    glow.scale.setScalar(config.projectBubbles.glow.scale);
     this.mesh.add(glow);
   }
 
