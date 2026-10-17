@@ -19,6 +19,8 @@ export const config = {
 
       depthMin: -100, // Minimum depth (z-position) of the background bubbles.
       depthMax: -2, // Maximum depth (z-position) of the background bubbles.
+
+      spawnPadding: 1, // Control how far outside the visible area background bubbles can spawn.
     },
     material: {
       fillOpacity: 0.6, // Opacity of the fill material for the background bubbles.

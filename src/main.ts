@@ -106,22 +106,24 @@ function spawnBackgroundBubble(bubble: THREE.Group): THREE.Vector2 {
         config.backgroundBubbles.appearance.depthMin);
 
   const bounds = getBounds(bubble.position.z);
+  const padding = config.backgroundBubbles.appearance.spawnPadding;
+
   const edge = Math.floor(Math.random() * 4);
 
   const x = (Math.random() * 2 - 1) * bounds.x;
   const y = (Math.random() * 2 - 1) * bounds.y;
 
   if (edge === 0) {
-    bubble.position.set(-bounds.x, y, bubble.position.z);
+    bubble.position.set(-bounds.x - padding, y, bubble.position.z);
     return new THREE.Vector2(1, (Math.random() - 0.5) * 0.8).normalize();
   } else if (edge === 1) {
-    bubble.position.set(bounds.x, y, bubble.position.z);
+    bubble.position.set(bounds.x + padding, y, bubble.position.z);
     return new THREE.Vector2(-1, (Math.random() - 0.5) * 0.8).normalize();
   } else if (edge === 2) {
-    bubble.position.set(x, -bounds.y, bubble.position.z);
+    bubble.position.set(x, -bounds.y - padding, bubble.position.z);
     return new THREE.Vector2((Math.random() - 0.5) * 0.8, 1).normalize();
   } else {
-    bubble.position.set(x, bounds.y, bubble.position.z);
+    bubble.position.set(x, bounds.y + padding, bubble.position.z);
     return new THREE.Vector2((Math.random() - 0.5) * 0.8, -1).normalize();
   }
 }
