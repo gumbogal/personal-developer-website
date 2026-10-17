@@ -4,6 +4,8 @@ export const config = {
     movement: {
       speedMin: 0.001, // Minimum speed of the background bubbles.
       speedMax: 0.006, // Maximum speed of the background bubbles.
+      depthSpeedMin: 0.08,
+      depthSpeedMax: 0.16,
 
       driftMin: 0.000001, // Minimum drift amount for the background bubbles.
       driftMax: 0.00001, // Maximum drift amount for the background bubbles.
@@ -12,6 +14,9 @@ export const config = {
     appearance: {
       sizeMin: 0.15, // Minimum size of the background bubbles.
       sizeMax: 0.5, // Maximum size of the background bubbles.
+      depthPathMin: -8, // Farthest Z position in the depth-travel path.
+      depthPathMax: 4.8, // Nearest Z position in the depth-travel path.
+      depthTravelChance: 0.35, // Chance that each bubble moves along the depth path.
 
       pulseAmplitude: 0.009, // Amplitude of the pulsing effect for the background bubbles.
       pulseFrequency: 5 + Math.random() * 5.2, // Frequency of the pulsing effect for the background bubbles.

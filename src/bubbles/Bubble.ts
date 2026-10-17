@@ -1,23 +1,25 @@
 import * as THREE from "three";
 import { config } from "../config";
 
-// This class represents a bubble in the 3D scene. It has a mesh (the visual representation of the bubble) and a velocity (the speed and direction of movement). The constructor initializes the mesh with a random position and velocity, and the update method updates the position of the bubble based on its velocity.
+// A foreground bubble's visual mesh, movement, and collision response.
 export class Bubble {
-  mesh: THREE.Mesh;
+  mesh: THREE.Mesh<THREE.SphereGeometry, THREE.MeshBasicMaterial>;
   velocity: THREE.Vector3;
 
   private baseScale = 1;
   private impact = 0;
   private impactDirection = new THREE.Vector2();
 
+  // Create the bubble's fill, outline, and glow, then assign initial motion.
   constructor(
     geometry: THREE.SphereGeometry,
-    material: THREE.Material,
+    material: THREE.MeshBasicMaterial,
     outlineMaterial: THREE.Material,
   ) {
     this.mesh = new THREE.Mesh(geometry, material.clone());
     this.mesh.position.set(Math.random() * 6 - 3, Math.random() * 4 - 2, 0);
 
+    // Start with a random direction and a speed within the configured range.
     const angle = Math.random() * Math.PI * 2;
     const speed =
       config.projectBubbles.movement.speedMin +
@@ -31,13 +33,12 @@ export class Bubble {
       0,
     );
 
+    // Give the fill one of the configured colors.
     const colors = config.projectBubbles.colors;
     const color = colors[Math.floor(Math.random() * colors.length)];
+    this.mesh.material.color.setHex(color);
 
-    const bubbleMaterial = this.mesh.material as THREE.MeshBasicMaterial;
-    bubbleMaterial.color.setHex(color);
-
-    // Eventually, the scale will be set by some representation of importance to me.
+    // Bubble size can later be tied to a project-specific importance value.
     const scale =
       config.projectBubbles.appearance.sizeMin +
       Math.random() *
@@ -61,7 +62,8 @@ export class Bubble {
     this.mesh.add(glow);
   }
 
-  applyImpact(direction: THREE.Vector2, strength: number) {
+  // Remember the strongest recent impact so the bubble can squash briefly.
+  applyImpact(direction: THREE.Vector2, strength: number): void {
     this.impact = Math.max(this.impact, strength);
     this.impactDirection.copy(direction).normalize();
   }
@@ -70,7 +72,8 @@ export class Bubble {
     return this.baseScale;
   }
 
-  update() {
+  // Apply a small force, cap speed, animate the shape, and move the bubble.
+  update(): void {
     // Add a tiny random force.
     const randomForceX = config.projectBubbles.movement.randomForceX;
     const randomForceY = config.projectBubbles.movement.randomForceY;
@@ -90,7 +93,7 @@ export class Bubble {
 
     const impactAmount = this.impact * 0.25;
 
-    // Squash aong the impact direction and expand perpendicular to it.
+    // Rotate toward the impact direction while the deformation recovers.
     const impactAngle = Math.atan2(
       this.impactDirection.y,
       this.impactDirection.x,
