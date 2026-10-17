@@ -14,7 +14,7 @@ export const config = {
       sizeMax: 0.5, // Maximum size of the background bubbles.
 
       pulseAmplitude: 0.009, // Amplitude of the pulsing effect for the background bubbles.
-      pulseFrequency: 5, // Frequency of the pulsing effect for the background bubbles.
+      pulseFrequency: 5 + Math.random() * 15, // Frequency of the pulsing effect for the background bubbles.
       pulsePhaseOffset: 1.2, // Phase offset for the pulsing effect of the background bubbles.
 
       depthMin: -100, // Minimum depth (z-position) of the background bubbles.
