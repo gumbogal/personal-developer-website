@@ -90,8 +90,10 @@ function placeBackgroundBubbleAnywhere(bubble: THREE.Group) {
 
   const bounds = getBounds(bubble.position.z);
 
-  const paddingX = bounds.x * 0.1;
-  const paddingY = bounds.y * 0.1;
+  const paddingX =
+    bounds.x * config.backgroundBubbles.appearance.initialPadding;
+  const paddingY =
+    bounds.y * config.backgroundBubbles.appearance.initialPadding;
 
   bubble.position.x = (Math.random() * 2 - 1) * (bounds.x - paddingX);
 
