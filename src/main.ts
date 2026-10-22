@@ -18,7 +18,6 @@ interface BackgroundBubbleState {
   depthProgress: number;
   depthDirection: 1 | -1;
   travelsInDepth: boolean;
-  hasCompletedInitialPlacement: boolean;
 }
 
 interface ViewportBounds {
@@ -183,7 +182,28 @@ for (let index = 0; index < config.backgroundBubbles.count; index++) {
     new THREE.Mesh(geometry, backgroundOutlineMaterial.clone()),
   );
   mesh.scale.setScalar(baseSize);
-  placeBackgroundBubble(mesh);
+
+  const travelsInDepth = Math.random() < depthTravelChance;
+
+  if (travelsInDepth) {
+    const depthMin = config.backgroundBubbles.appearance.depthPathMin;
+    const depthMax = Math.min(
+      config.backgroundBubbles.appearance.depthPathMax,
+      0,
+    );
+
+    const depthProgress = Math.random();
+
+    mesh.position.z = depthMin + depthProgress * (depthMax - depthMin);
+
+    const bounds = getViewportBounds(mesh.position.z);
+    const padding = 0.15;
+
+    mesh.position.x = (Math.random() * 2 - 1) * bounds.x * (1 - padding);
+    mesh.position.y = (Math.random() * 2 - 1) * bounds.y * (1 - padding);
+  } else {
+    placeBackgroundBubble(mesh);
+  }
 
   backgroundBubbleStates.push({
     mesh,
@@ -194,10 +214,13 @@ for (let index = 0; index < config.backgroundBubbles.count; index++) {
     impactDirection: new THREE.Vector2(),
     depthPhase: Math.random() * Math.PI * 2,
     depthSpeed: depthSpeedMin + Math.random() * (depthSpeedMax - depthSpeedMin),
-    depthProgress: Math.random(),
+    depthProgress: travelsInDepth
+      ? (mesh.position.z - config.backgroundBubbles.appearance.depthPathMin) /
+        (Math.min(config.backgroundBubbles.appearance.depthPathMax, 0) -
+          config.backgroundBubbles.appearance.depthPathMin)
+      : Math.random(),
     depthDirection: Math.random() < 0.5 ? 1 : -1,
-    travelsInDepth: Math.random() < depthTravelChance,
-    hasCompletedInitialPlacement: false,
+    travelsInDepth,
   });
 
   scene.add(mesh);
@@ -308,16 +331,6 @@ function updateBackgroundBubbles(time: number, deltaTime: number): void {
       }
 
       mesh.position.z = depthMin + state.depthProgress * depthRange;
-
-      if (!state.hasCompletedInitialPlacement) {
-        const bounds = getViewportBounds(mesh.position.z);
-        const padding = 0.15;
-
-        mesh.position.x = (Math.random() * 2 - 1) * bounds.x * (1 - padding);
-        mesh.position.y = (Math.random() * 2 - 1) * bounds.y * (1 - padding);
-
-        state.hasCompletedInitialPlacement = true;
-      }
     }
 
     const driftOffset =
