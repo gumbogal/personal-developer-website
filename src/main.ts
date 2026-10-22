@@ -18,6 +18,7 @@ interface BackgroundBubbleState {
   depthProgress: number;
   depthDirection: 1 | -1;
   travelsInDepth: boolean;
+  hasCompletedInitialPlacement: boolean;
 }
 
 interface ViewportBounds {
@@ -196,6 +197,7 @@ for (let index = 0; index < config.backgroundBubbles.count; index++) {
     depthProgress: Math.random(),
     depthDirection: Math.random() < 0.5 ? 1 : -1,
     travelsInDepth: Math.random() < depthTravelChance,
+    hasCompletedInitialPlacement: false,
   });
 
   scene.add(mesh);
@@ -306,6 +308,16 @@ function updateBackgroundBubbles(time: number, deltaTime: number): void {
       }
 
       mesh.position.z = depthMin + state.depthProgress * depthRange;
+
+      if (!state.hasCompletedInitialPlacement) {
+        const bounds = getViewportBounds(mesh.position.z);
+        const padding = 0.15;
+
+        mesh.position.x = (Math.random() * 2 - 1) * bounds.x * (1 - padding);
+        mesh.position.y = (Math.random() * 2 - 1) * bounds.y * (1 - padding);
+
+        state.hasCompletedInitialPlacement = true;
+      }
     }
 
     const driftOffset =
@@ -342,7 +354,8 @@ function updateBackgroundBubbles(time: number, deltaTime: number): void {
     mesh.scale.set(visualSize * stretchX, visualSize * squashY, visualSize);
 
     // Fade bubbles as they approach the foreground project layer.
-    const opacityMultiplier = 1 - THREE.MathUtils.smoothstep(mesh.position.z, fadeStartZ, fadeEndZ);
+    const opacityMultiplier =
+      1 - THREE.MathUtils.smoothstep(mesh.position.z, fadeStartZ, fadeEndZ);
 
     // Fade both the fill and outline together.
     const fill = mesh.children[0] as THREE.Mesh;
@@ -355,7 +368,7 @@ function updateBackgroundBubbles(time: number, deltaTime: number): void {
       config.backgroundBubbles.material.outlineOpacity * opacityMultiplier;
 
     const bounds = getViewportBounds(mesh.position.z);
-    const margin = mesh.scale.x;
+    const margin = Math.max(mesh.scale.x, appearance.spawnPadding);
     const hasLeftViewport =
       mesh.position.x > bounds.x + margin ||
       mesh.position.x < -bounds.x - margin ||
