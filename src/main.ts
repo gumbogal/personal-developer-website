@@ -98,6 +98,10 @@ const backgroundOutlineMaterial = new THREE.MeshBasicMaterial({
 
 const backgroundBubbleStates: BackgroundBubbleState[] = [];
 
+// Fade background bubbles as they approach the foreground layer.
+const fadeStartZ = -2;
+const fadeEndZ = 0;
+
 // Convert a bubble's depth into the horizontal and vertical camera bounds.
 function getViewportBounds(z = 0): ViewportBounds {
   const distance = camera.position.z - z;
@@ -174,8 +178,8 @@ for (let index = 0; index < config.backgroundBubbles.count; index++) {
   const speed = speedMin + Math.random() * (speedMax - speedMin);
 
   mesh.add(
-    new THREE.Mesh(geometry, backgroundFillMaterial),
-    new THREE.Mesh(geometry, backgroundOutlineMaterial),
+    new THREE.Mesh(geometry, backgroundFillMaterial.clone()),
+    new THREE.Mesh(geometry, backgroundOutlineMaterial.clone()),
   );
   mesh.scale.setScalar(baseSize);
   placeBackgroundBubble(mesh);
@@ -279,6 +283,9 @@ function resolveProjectBubbleCollisions(): void {
 function updateBackgroundBubbles(time: number, deltaTime: number): void {
   const appearance = config.backgroundBubbles.appearance;
   const movement = config.backgroundBubbles.movement;
+  const depthMin = appearance.depthPathMin;
+  const depthMax = Math.min(appearance.depthPathMax, 0);
+  const depthRange = depthMax - depthMin;
 
   for (let index = 0; index < backgroundBubbleStates.length; index++) {
     const state = backgroundBubbleStates[index];
@@ -286,24 +293,19 @@ function updateBackgroundBubbles(time: number, deltaTime: number): void {
 
     if (state.travelsInDepth) {
       state.depthProgress +=
-        (state.depthDirection * (state.depthSpeed * deltaTime)) /
-        (appearance.depthPathMax - appearance.depthPathMin);
+        (state.depthDirection * state.depthSpeed * deltaTime) / depthRange;
 
-      if (state.depthProgress >= 1 || state.depthProgress <= 0) {
-        state.depthProgress = Math.random();
-        state.depthDirection = Math.random() < 0.5 ? 1 : -1;
-
-        state.depthSpeed =
-          movement.depthSpeedMin +
-          Math.random() * (movement.depthSpeedMax - movement.depthSpeedMin);
-
-        spawnBackgroundBubble(mesh);
+      if (state.depthProgress >= 1) {
+        state.depthProgress = 1;
+        state.depthDirection = -1;
       }
 
-      mesh.position.z =
-        appearance.depthPathMin +
-        state.depthProgress *
-          (appearance.depthPathMax - appearance.depthPathMin);
+      if (state.depthProgress <= 0) {
+        state.depthProgress = 0;
+        state.depthDirection = 1;
+      }
+
+      mesh.position.z = depthMin + state.depthProgress * depthRange;
     }
 
     const driftOffset =
@@ -338,6 +340,19 @@ function updateBackgroundBubbles(time: number, deltaTime: number): void {
       state.impact > 0.01 ? impactAngle : Math.atan2(velocity.y, velocity.x);
     const visualSize = baseSize * pulse;
     mesh.scale.set(visualSize * stretchX, visualSize * squashY, visualSize);
+
+    // Fade bubbles as they approach the foreground project layer.
+    const opacityMultiplier = 1 - THREE.MathUtils.smoothstep(mesh.position.z, fadeStartZ, fadeEndZ);
+
+    // Fade both the fill and outline together.
+    const fill = mesh.children[0] as THREE.Mesh;
+    const outline = mesh.children[1] as THREE.Mesh;
+
+    (fill.material as THREE.MeshBasicMaterial).opacity =
+      config.backgroundBubbles.material.fillOpacity * opacityMultiplier;
+
+    (outline.material as THREE.MeshBasicMaterial).opacity =
+      config.backgroundBubbles.material.outlineOpacity * opacityMultiplier;
 
     const bounds = getViewportBounds(mesh.position.z);
     const margin = mesh.scale.x;
