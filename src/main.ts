@@ -18,6 +18,9 @@ interface BackgroundBubbleState {
   depthProgress: number;
   depthDirection: 1 | -1;
   travelsInDepth: boolean;
+  impactPosition: THREE.Vector3;
+  impactStrength: number;
+  shaderUniforms: ReturnType<typeof createBackgroundBubbleShaderUniforms>;
 }
 
 interface ViewportBounds {
@@ -96,6 +99,65 @@ const backgroundOutlineMaterial = new THREE.MeshBasicMaterial({
   wireframe: true,
   depthWrite: false,
 });
+
+function createBackgroundBubbleShaderUniforms() {
+  return {
+    uTime: { value: 0 },
+    uImpactPosition: {
+      value: new THREE.Vector3(0, 0, 1),
+    },
+    uImpactStrength: { value: 0 },
+  };
+}
+
+function addBackgroundBubbleDeformation(
+  material: THREE.MeshBasicMaterial,
+  uniforms: ReturnType<typeof createBackgroundBubbleShaderUniforms>,
+): void {
+  material.onBeforeCompile = (shader) => {
+    shader.uniforms.uTime = uniforms.uTime;
+    shader.uniforms.uImpactPosition = uniforms.uImpactPosition;
+    shader.uniforms.uImpactStrength = uniforms.uImpactStrength;
+    shader.vertexShader = shader.vertexShader.replace(
+      "#include <common>",
+      `
+        #include <common>
+        uniform float uTime;
+        uniform vec3 uImpactPosition;
+        uniform float uImpactStrength;
+      `,
+    );
+
+    shader.vertexShader = shader.vertexShader.replace(
+      "#include <begin_vertex>",
+      `
+    #include <begin_vertex>
+
+    float waveA = sin(position.x * 4.0 + uTime * 1.5);
+    float waveB = sin(position.y * 3.0 - uTime * 1.2);
+    float waveC = sin(position.z * 5.0 + uTime * 0.8);
+
+    float displacement = (waveA * waveB + waveC * 0.35) * 0.12;
+
+    transformed += normal * displacement;
+
+    float impactDot = dot(
+      normalize(position),
+      normalize(uImpactPosition)
+    );
+
+    float impactFalloff = exp(-max(1.0 - impactDot, 0.0) * 8.0);
+
+    float impactDent = -uImpactStrength * impactFalloff * 0.4;
+    float impactBulge = uImpactStrength * impactFalloff * 0.12;
+
+    transformed += normal * (impactDent + impactBulge);
+  `,
+    );
+  };
+
+  material.customProgramCacheKey = () => "background-bubble-deformation-v1";
+}
 
 const backgroundBubbleStates: BackgroundBubbleState[] = [];
 
@@ -178,10 +240,18 @@ for (let index = 0; index < config.backgroundBubbles.count; index++) {
   ).normalize();
   const speed = speedMin + Math.random() * (speedMax - speedMin);
 
+  const fillMaterial = backgroundFillMaterial.clone();
+  const outlineMaterial = backgroundOutlineMaterial.clone();
+
+  const shaderUniforms = createBackgroundBubbleShaderUniforms();
+
+  addBackgroundBubbleDeformation(fillMaterial, shaderUniforms);
+  addBackgroundBubbleDeformation(outlineMaterial, shaderUniforms);
+
   // TODO: Potentially update with backgroundBubbleGeometry.
   mesh.add(
-    new THREE.Mesh(geometry, backgroundFillMaterial.clone()),
-    new THREE.Mesh(geometry, backgroundOutlineMaterial.clone()),
+    new THREE.Mesh(geometry, fillMaterial),
+    new THREE.Mesh(geometry, outlineMaterial),
   );
   mesh.scale.setScalar(baseSize);
 
@@ -223,6 +293,9 @@ for (let index = 0; index < config.backgroundBubbles.count; index++) {
       : Math.random(),
     depthDirection: Math.random() < 0.5 ? 1 : -1,
     travelsInDepth,
+    impactPosition: new THREE.Vector3(0, 0, 1),
+    impactStrength: 0,
+    shaderUniforms,
   });
 
   scene.add(mesh);
@@ -356,6 +429,9 @@ function updateBackgroundBubbles(time: number, deltaTime: number): void {
       THREE.MathUtils.clamp(speed / movement.speedMax, 0, 1) * 0.16;
 
     state.impact *= Math.pow(0.96, deltaTime * 60);
+    state.shaderUniforms.uTime.value = time;
+    state.shaderUniforms.uImpactStrength.value = state.impact > 0.01 ? 1 : 0;
+    state.shaderUniforms.uImpactPosition.value.set(0, 0, 1);
     const impactAmount = state.impact * 1.2;
     const impactAngle = Math.atan2(
       state.impactDirection.y,
@@ -466,6 +542,10 @@ function resolveBackgroundBubbleCollisions(): void {
       const impactStrength = Math.min(Math.abs(speedAlongCollision) * 20, 1);
       first.impact = Math.max(first.impact, impactStrength);
       second.impact = Math.max(second.impact, impactStrength);
+      first.shaderUniforms.uImpactStrength.value = impactStrength;
+      second.shaderUniforms.uImpactStrength.value = impactStrength;
+      first.impactPosition.set(-direction.x, -direction.y, 0.25).normalize();
+      second.impactPosition.set(-direction.x, -direction.y, 0.25).normalize();
       first.impactDirection.copy(direction);
       second.impactDirection.copy(direction).negate();
 
