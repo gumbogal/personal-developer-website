@@ -1,6 +1,6 @@
 export const config = {
   backgroundBubbles: {
-    count: 500, // Number of background bubbles to generate.
+    count: 700, // Number of background bubbles to generate.
     movement: {
       speedMin: 0.001, // Minimum speed of the background bubbles.
       speedMax: 0.006, // Maximum speed of the background bubbles.

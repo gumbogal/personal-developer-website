@@ -53,6 +53,7 @@ composer.addPass(
 
 // Shared sphere geometry and foreground bubble materials.
 const geometry = new THREE.SphereGeometry(1, 32, 32);
+const backgroundBubbleGeometry = new THREE.SphereGeometry(1, 64, 64);
 
 const projectBubbleMaterial = new THREE.MeshBasicMaterial({
   color: 0xffffff,
@@ -177,6 +178,7 @@ for (let index = 0; index < config.backgroundBubbles.count; index++) {
   ).normalize();
   const speed = speedMin + Math.random() * (speedMax - speedMin);
 
+  // TODO: Potentially update with backgroundBubbleGeometry.
   mesh.add(
     new THREE.Mesh(geometry, backgroundFillMaterial.clone()),
     new THREE.Mesh(geometry, backgroundOutlineMaterial.clone()),
@@ -350,10 +352,11 @@ function updateBackgroundBubbles(time: number, deltaTime: number): void {
       ) *
         appearance.pulseAmplitude;
     const speed = velocity.length();
-    const stretch = Math.min(speed / movement.speedMax, 1) * 0.12;
+    const stretch =
+      THREE.MathUtils.clamp(speed / movement.speedMax, 0, 1) * 0.16;
 
-    state.impact *= 0.85;
-    const impactAmount = state.impact * 0.25;
+    state.impact *= Math.pow(0.96, deltaTime * 60);
+    const impactAmount = state.impact * 1.2;
     const impactAngle = Math.atan2(
       state.impactDirection.y,
       state.impactDirection.x,
@@ -466,7 +469,9 @@ function resolveBackgroundBubbleCollisions(): void {
       first.impactDirection.copy(direction);
       second.impactDirection.copy(direction).negate();
 
-      const impulse = direction.clone().multiplyScalar(speedAlongCollision);
+      const impulse = direction
+        .clone()
+        .multiplyScalar(speedAlongCollision * 0.95);
       first.velocity.add(impulse);
       second.velocity.sub(impulse);
     }
